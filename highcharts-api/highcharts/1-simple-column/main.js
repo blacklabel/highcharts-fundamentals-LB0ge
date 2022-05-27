@@ -1,74 +1,63 @@
-"use strict";
-// Functions
-// Transpose 2D array
-function transpose(a) {
-  return Object.keys(a[0]).map((c) => a.map((r) => r[c]));
-}
+'use strict';
 
 // Data
-const rData = [[], [], []],
-  maxValues = [];
+const rData = [[], [], []];
 
-// fill 3x3 2D array with random data values from 0 to 10
+// Fill 3x3 2D array with random integers from 0 to 10
 for (let i in rData) {
   for (let j = 0; j < 3; j++) {
-    rData[i].push(Math.random() * 10);
+    rData[i].push(Math.floor(Math.random() * 11));
   }
 }
 
-// Create 2D array with one array of values for each category/month
-const catData = transpose(rData);
-
-// Find maximum y-value in each category
-for (let i in catData) {
-  maxValues.push(Math.max(...catData[i]));
-}
-
-const yMax = Math.max(...maxValues);
+const yMax = Math.max(...rData.flat());
 
 // Create chart
-Highcharts.chart("container", {
+Highcharts.chart('container', {
   chart: {
-    type: "column",
+    type: 'column'
   },
   title: {
-    text: "3 column series with random data",
+    text: '3 column series with random data'
   },
   yAxis: {
-    endOnTick: false,
+    // endOnTick: false, // endOnTick forces the axis to end on a tick. Set to true by default. In order to force the axis to end on a given max value (yAxis.max) and override the endOnTick option, we can set endOnTick to false.
+    // Alternatively, if we instead want to show a tick on the yAxis max value, we can leave endOnTick to its default value and use tickPositioner to replace the last element in the tickPositions array with the max value.
+    tickPositioner: function () {
+      let pos = this.tickPositions;
+      pos.splice(-1, 1, this.max);
+      return pos;
+    },
     max: 2 * yMax,
     plotLines: [
       {
-        color: "green",
-        dashStyle: "LongDash",
-        value: 1.5 * yMax,
-      },
-    ],
+        color: 'green',
+        dashStyle: 'LongDash',
+        value: 1.5 * yMax
+      }
+    ]
   },
   xAxis: {
-    categories: ["Jan", "Feb", "Mar"],
+    categories: ['Jan', 'Feb', 'Mar']
   },
   plotOptions: {
     series: {
       dataLabels: {
         enabled: true,
         formatter: function () {
-          if (maxValues.includes(this.y)) {
-            return "max";
-            // let dataMax = this.series.dataMax;
-            // if (this.y === dataMax) {
-            //   return "max";
+          if (this.y === yMax) {
+            return 'max';
           }
-        },
-      },
-    },
+        }
+      }
+    }
   },
   series: [
     {
-      name: "Tokyo",
-      data: rData[0],
+      name: 'Tokyo',
+      data: rData[0]
     },
-    { name: "New York", data: rData[1] },
-    { name: "London", data: rData[2] },
-  ],
+    { name: 'New York', data: rData[1] },
+    { name: 'London', data: rData[2] }
+  ]
 });
