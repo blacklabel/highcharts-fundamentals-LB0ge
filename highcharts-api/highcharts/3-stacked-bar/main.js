@@ -1,14 +1,12 @@
-'use strict';
 // Function to add button
+
 const addButton = function (x, y, chart) {
-  chart.renderer
-    .button(
-      'How to fix',
-      x,
-      y,
-      function () {
-        console.log('Button clicked');
-      },
+  function onClickButton() {
+    console.log('Button clicked');
+  }
+  // prettier-ignore
+  const button = chart.renderer
+    .button('How to fix', x, y, onClickButton,
       {
         'stroke': 'blue',
         'stroke-width': 2
@@ -17,42 +15,79 @@ const addButton = function (x, y, chart) {
         stroke: 'darkblue'
       }
     )
-    .add();
+    .add()
+    .toFront();
+  return button;
 };
 
-Highcharts.chart('container', {
+// Global variables
+let customElements;
+const chart = Highcharts.chart('container', {
   chart: {
     type: 'bar',
     events: {
       render: function () {
-        const items = document.querySelectorAll(
-          '.highcharts-button, .highcharts-axis-custom-labels'
-        );
-        items.forEach((b) => b.remove()); // clear buttons and custom labels before render
-
         const c = this;
-        const x = c.chartWidth - 100; // buttons x-position
+
+        // Buttons
+        const buttonX = c.chartWidth - 100; // buttons x-position
         const y = (i) => c.xAxis[0].toPixels(i - 1 / 4); // buttons y-positions
+
+        // Ticks
+        const ticks = c.xAxis[0].ticks;
+        const gridLineXStart = ticks[-1].gridLine.pathArray[0][1]; // x-position for start of gridlines
+
+        // Destroy custom elements if rendered previously
+        if (customElements) {
+          //console.log(customElements[5].xGetter());
+          customElements.forEach((el) => el.destroy());
+        }
+
+        // Add custom rendered elements: buttons, labels, extended gridlines
+        customElements = [];
 
         // Add buttons
         for (let i = 0; i < c.series[0].data.length; i++) {
-          addButton(x, y(i), c);
+          customElements[i] = addButton(buttonX, y(i), c);
         }
+
         // Add custom labels
-        c.renderer
-          .text(
-            '<text class="highcharts-axis-custom-labels" style="color: rgb(102, 102, 102); font-weight: bold">Record Count</text>',
-            c.chartWidth / 4,
-            46
-          )
-          .add();
-        c.renderer
-          .text(
-            '<text class="highcharts-axis-custom-labels" style="color: rgb(102, 102, 102); font-weight: bold">Action</text>',
-            x,
-            46
-          )
-          .add();
+
+        customElements.push(
+          c.renderer
+            .text('Issue', 20, 46)
+            .css({ fontWeight: 'bold' })
+            .add()
+            .toFront()
+        );
+
+        customElements.push(
+          c.renderer
+            .text('Record Count', c.chartWidth / 4, 46)
+            .css({ fontWeight: 'bold' })
+            .add()
+            .toFront()
+        );
+
+        customElements.push(
+          c.renderer
+            .text('Action', buttonX, 46)
+            .css({ fontWeight: 'bold' })
+            .add()
+            .toFront()
+        );
+
+        // Add extended gridlines
+        Object.values(ticks).forEach((el) => {
+          let yPos = el.gridLine.pathArray[0][2];
+          customElements.push(
+            c.renderer
+              .path(['M', gridLineXStart, yPos, 'L', 0, yPos])
+              .attr({ 'stroke': '#e6e6e6', 'stroke-width': 1 })
+              .add()
+              .toFront()
+          );
+        });
       }
     }
   },
@@ -65,44 +100,23 @@ Highcharts.chart('container', {
     }
   },
   xAxis: {
-    title: {
-      text: 'Issue', // "Custom" title. Could also have been added as custom label together with the other two labels
-      offset: 0,
-      rotation: 0,
-      y: -150,
-      x: 80,
-      style: {
-        'font-weight': 'bold'
-      }
-    },
     categories: ['Data', 'Emails', 'Duplicates', 'Support'],
     lineWidth: 0,
     gridLineWidth: 1,
     labels: {
-      align: 'right',
-      x: 120
-    }
+      align: 'right'
+    },
+    startOnTick: false
   },
   yAxis: {
-    min: -100,
     max: 450,
-    minPadding: 1000,
     title: {
-      text: 'Amount',
-      enabled: true
+      text: 'Amount'
     },
     gridLineWidth: 0,
-    lineWidth: 0,
     stackLabels: {
       enabled: true,
       format: '{total} K'
-    },
-    labels: {
-      formatter: function () {
-        if (this.value >= 0) {
-          return this.value;
-        }
-      }
     }
   },
   series: [
