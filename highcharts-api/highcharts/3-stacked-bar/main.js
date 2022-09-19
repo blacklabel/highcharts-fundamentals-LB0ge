@@ -1,93 +1,123 @@
-// Function to add button
+// Functions
 
+// Add button
 const addButton = function (x, y, chart) {
   function onClickButton() {
-    console.log('Button clicked');
+    alert('Button clicked');
   }
-  // prettier-ignore
+
   const button = chart.renderer
-    .button('How to fix', x, y, onClickButton,
-      {
+    .button('How to fix', x, y)
+    .attr({
+      'stroke': 'blue',
+      'stroke-width': 2
+    })
+    .on('click', onClickButton)
+    .on('mouseout' && 'mouseenter', function () {
+      button.attr({
+        'stroke': 'darkblue',
+        'stroke-width': 2
+      });
+    })
+    .on('mouseleave', function () {
+      button.attr({
         'stroke': 'blue',
         'stroke-width': 2
-      },
-      {
-        stroke: 'darkblue'
-      }
-    )
-    .add()
-    .toFront();
-  return button;
+      });
+    })
+    .add(buttonGroup);
 };
 
+// Add text label
+const addTextLabel = function (text, xPos, yPos, chart) {
+  chart.renderer
+    .text(text, xPos, yPos)
+    .css({ fontWeight: 'bold' })
+    .add(customLabelGroup);
+};
+
+// Destroy groups of custom elements
+const destroyElements = function (elementGroupArray) {
+  elementGroupArray.forEach(
+    (elementGroup) => elementGroup && elementGroup.destroy() // destroy if elementGroup already exists
+  );
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Global variables
-let customElements;
+
+let buttonGroup, customLabelGroup, tickExtensionGroup;
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Create chart
 const chart = Highcharts.chart('container', {
   chart: {
     type: 'bar',
     events: {
       render: function () {
-        const c = this;
-
-        // Buttons
-        const buttonX = c.chartWidth - 100; // buttons x-position
-        const y = (i) => c.xAxis[0].toPixels(i - 1 / 4); // buttons y-positions
-
-        // Ticks
-        const ticks = c.xAxis[0].ticks;
-        const gridLineXStart = ticks[-1].gridLine.pathArray[0][1]; // x-position for start of gridlines
+        const chart = this;
 
         // Destroy custom elements if rendered previously
-        if (customElements) {
-          //console.log(customElements[5].xGetter());
-          customElements.forEach((el) => el.destroy());
-        }
+        const customElementGroups = [
+          buttonGroup,
+          customLabelGroup,
+          tickExtensionGroup
+        ];
+        destroyElements(customElementGroups);
 
-        // Add custom rendered elements: buttons, labels, extended gridlines
-        customElements = [];
+        // Make new custom element groups
+        buttonGroup = chart.renderer.g().add().toFront();
+        customLabelGroup = chart.renderer.g().add().toFront();
+        tickExtensionGroup = chart.renderer.g().add().toFront();
+
+        // Buttons
+
+        const buttonX = chart.chartWidth - 100; // buttons x-position
+        const buttonY = (i) => chart.xAxis[0].toPixels(i - 1 / 4); // buttons y-positions
+
+        // Ticks
+
+        const ticks = chart.xAxis[0].ticks;
+        const gridLineXStart = ticks[-1].gridLine.pathArray[0][1]; // x-position for start of gridlines
+        const topGridLineY = ticks[-1].gridLine.pathArray[0][2]; // y-position of top gridline
+
+        // Text labels:
+
+        const textLabels = [
+          // custom label texts and x-positions
+          { text: 'Issue', xPos: 20 },
+          { text: 'Record Count', xPos: chart.chartWidth / 4 },
+          { text: 'Action', xPos: buttonX }
+        ];
+
+        const labelYPos = topGridLineY - 10; // y-position for all custom text labels
 
         // Add buttons
-        for (let i = 0; i < c.series[0].data.length; i++) {
-          customElements[i] = addButton(buttonX, y(i), c);
+        for (let i = 0; i < chart.series[0].data.length; i++) {
+          addButton(buttonX, buttonY(i), chart);
         }
-
-        // Add custom labels
-
-        customElements.push(
-          c.renderer
-            .text('Issue', 20, 46)
-            .css({ fontWeight: 'bold' })
-            .add()
-            .toFront()
-        );
-
-        customElements.push(
-          c.renderer
-            .text('Record Count', c.chartWidth / 4, 46)
-            .css({ fontWeight: 'bold' })
-            .add()
-            .toFront()
-        );
-
-        customElements.push(
-          c.renderer
-            .text('Action', buttonX, 46)
-            .css({ fontWeight: 'bold' })
-            .add()
-            .toFront()
-        );
 
         // Add extended gridlines
         Object.values(ticks).forEach((el) => {
           let yPos = el.gridLine.pathArray[0][2];
-          customElements.push(
-            c.renderer
-              .path(['M', gridLineXStart, yPos, 'L', 0, yPos])
-              .attr({ 'stroke': '#e6e6e6', 'stroke-width': 1 })
-              .add()
-              .toFront()
-          );
+
+          chart.renderer
+            .path(['M', gridLineXStart, yPos, 'L', 0, yPos])
+            .attr({ 'stroke': '#e6e6e6', 'stroke-width': 1 })
+            .add(tickExtensionGroup);
         });
+
+        // Add custom labels
+        for (let i = 0; i < textLabels.length; i++) {
+          addTextLabel(
+            textLabels[i].text,
+            textLabels[i].xPos,
+            labelYPos,
+            chart
+          );
+        }
       }
     }
   },
@@ -105,8 +135,7 @@ const chart = Highcharts.chart('container', {
     gridLineWidth: 1,
     labels: {
       align: 'right'
-    },
-    startOnTick: false
+    }
   },
   yAxis: {
     max: 450,
