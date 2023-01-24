@@ -5,7 +5,7 @@ const randNumGenerator = function (min, max) {
 };
 
 const numCat = categories.length; // number of categories
-const seriesPerCat = 500; // number of series per category
+const seriesPerCat = 250; // number of series per category
 const randMin = 50; // random number min
 const randMax = 95; // random number max
 
@@ -36,7 +36,6 @@ Highcharts.chart('container', {
   title: {
     text: ''
   },
-  type: 'column',
   legend: {
     enabled: false
   },
@@ -47,7 +46,8 @@ Highcharts.chart('container', {
       color: '#ff0000',
       borderWidth: 0,
       enableMouseTracking: false,
-      animation: false
+      animation: false,
+      pointPadding: 0
     }
 
   },
