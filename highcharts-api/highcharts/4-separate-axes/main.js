@@ -1,4 +1,3 @@
-const categories = ['Dep1', 'Dep2', 'Dep3', 'Dep4', 'Dep5'];
 const yMax = 100;
 const data_1 = [32, 43, 55, 78, 12];
 const data_2 = [50, 56, 50, 40, 14];
@@ -6,57 +5,22 @@ const data_2 = [50, 56, 50, 40, 14];
 const mainColor = '#FF0000';
 const restColor = '#A1B5C9';
 
-// Update xAxis options
-const xAxisOptions = function (chart) {
-  const labelPos = chart.chartWidth / 2;
-  return {
-    labels: {
-      x: labelPos
-    }
-  };
-};
-
-// Update yAxis options
-const yAxisOptions = function (chart, rightAxis = true) {
-  const titlePosY = -chart.plotHeight - chart.plotTop;
-  const titlePosX = (-chart.chartWidth * 1) / 3;
-
-  if (rightAxis) {
-    return {
-      title: {
-        y: titlePosY,
-        x: titlePosX
-      }
-    };
-  }
-
-  if (!rightAxis) {
-    return {
-      title: {
-        y: titlePosY,
-        x: -titlePosX
-      }
-    };
-  }
-};
-
-const updateAxisOptions = function (chart) {
-  chart.xAxis[0].update(xAxisOptions(chart), false);
-  chart.yAxis[0].update(yAxisOptions(chart), false); // right axis
-  chart.yAxis[1].update(yAxisOptions(chart, false), true); // left axis, redraw here only
-};
-
-let chart = Highcharts.chart('container', {
+Highcharts.chart('container', {
   chart: {
     type: 'bar',
     events: {
       render() {
-        const chart = this;
-        const xLabelPos = chart.xAxis[0].options.labels.x;
-        const xLabelPosNew = chart.chartWidth / 2;
+        const chart = this,
+            titlePosY = -chart.plotHeight - chart.plotTop,
+            titlePosX = chart.yAxis[0].options.title.x,
+            titlePosXNew = -chart.chartWidth  / 3;
 
-        // Update axis options and redraw only if xLabelPos is not equal to xLabelPosNew
-        xLabelPos === xLabelPosNew || updateAxisOptions(chart);
+        // Update and redraw yAxis options only if titlePosX is not equal to titlePosXNew
+        if (titlePosX !== titlePosXNew){
+            for(let i = 0; i < 2; i++){
+            chart.yAxis[i].setTitle({y:titlePosY, x: i === 0 ? titlePosXNew : -titlePosXNew})
+        }
+        }
       }
     },
     marginTop: 50
@@ -77,8 +41,13 @@ let chart = Highcharts.chart('container', {
   },
   xAxis: [
     {
-      categories: categories,
-      lineWidth: 0
+      categories: ['Dep1', 'Dep2', 'Dep3', 'Dep4', 'Dep5'],
+      lineWidth: 0,
+      left: '50%',
+      labels: {
+        align: 'left'
+      }
+      
     }
   ],
   yAxis: [
