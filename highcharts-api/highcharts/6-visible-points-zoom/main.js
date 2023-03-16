@@ -1,41 +1,4 @@
-let customLabel, circles, currentMax, labelsRendered;
-
 const isMax = (value, max) => value === max;
-
-const updateLabels = function (chart, curMax) {
-  chart.update(
-    {
-      plotOptions: {
-        series: {
-          dataLabels: {
-            enabled: true,
-            color: 'red',
-            style: {
-              textOutline: 'none'
-            },
-            formatter() {
-              return isMax(this.y, curMax) ? this.y : null;
-            }
-          }
-        }
-      }
-    },
-    false
-  );
-};
-
-const renderCustomLabel = (chart, n) =>
-  chart.renderer.text(`Visible points: ${n}`, 50, chart.chartHeight - 20).add();
-
-const getSelectionMaxPointsX = function (points, curMax) {
-  const selectionMaxPointsX = [];
-  points.forEach((point) => {
-    if (isMax(point.y, curMax)) {
-      selectionMaxPointsX.push(point.x);
-    }
-  });
-  return selectionMaxPointsX;
-};
 
 Highcharts.chart('container', {
   chart: {
@@ -52,42 +15,57 @@ Highcharts.chart('container', {
         const chart = this,
           points = chart.series[0].points, // all points
           visiblePoints = chart.series[0].getValidPoints(points, true), // visible points
-          n = visiblePoints.length; // number of visible points
+          n = visiblePoints.length, // number of visible points
+          currentMax = Math.max(...visiblePoints.map((o) => o.y));
 
-        currentMax = Math.max(...visiblePoints.map((o) => o.y));
-
-        // Get x-values for max points in selection
-        const selectionMaxPointsX = getSelectionMaxPointsX(
-          visiblePoints,
-          currentMax
-        );
-
-        // Render custom label, indicating n number of datapoints in view
-        if (customLabel) {
-          customLabel.destroy();
-        }
-        customLabel = renderCustomLabel(chart, n);
+        // Render custom label
+        chart.customLabel
+          ? chart.customLabel.attr({ text: `Visible points: ${n}` })
+          : chart.customLabel = chart.renderer.text(`Visible points: ${n}`, 50, chart.chartHeight - 20).add();
 
         // Render value labels
-        if (!labelsRendered) {
-          updateLabels(chart, currentMax);
-          labelsRendered = true;
+        if (!chart.labelsRendered) {
+          points.forEach((point) => {
+            point.update(
+              { label: isMax(point.y, currentMax) ? point.y : null }, false
+              );
+            });
+
+          chart.labelsRendered = true;
           chart.redraw();
-          labelsRendered = false;
-        }
+          chart.labelsRendered = false;
 
-        // Add circles
-        if (circles) {
-          circles.destroy();
-        }
-        circles = chart.renderer.g().add().toFront();
+          // Add circles
+          if (chart.circles) {
+            chart.circles.destroy();
+          }
 
-        const yMin = chart.yAxis[0].getExtremes().min;
+          chart.circles = chart.renderer.g().add().toFront();
 
-        selectionMaxPointsX.forEach( (el) => chart.renderer
+          const yMin = chart.yAxis[0].getExtremes().min,
+            selectionMaxPoints = points.filter((point) => point.label === point.y),
+            selectionMaxPointsX = selectionMaxPoints.map((point) => point.x);
+
+          selectionMaxPointsX.forEach((el) =>
+            chart.renderer
               .circle(chart.xAxis[0].toPixels(el), chart.yAxis[0].toPixels(yMin) + 0.5, 3)
-              .attr({ fill: 'red' }).add(circles)
-        );
+              .attr({ fill: 'red' }).add(chart.circles)
+          );
+        }
+      }
+    }
+  },
+  plotOptions: {
+    series: {
+      dataLabels: {
+        enabled: true,
+        color: 'red',
+        style: {
+          textOutline: 'none'
+        },
+        formatter() {
+          return this.point.label;
+        }
       }
     }
   },
