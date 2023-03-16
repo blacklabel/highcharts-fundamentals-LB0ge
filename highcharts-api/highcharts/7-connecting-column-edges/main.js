@@ -3,10 +3,6 @@ Highcharts.chart('container', {
   chart: {
     type: 'column',
     events: {
-      load() {
-        const chart = this;
-        chart.customLines;
-      },
       render() {
         const chart = this,
           yAxis = chart.yAxis[0],
@@ -31,21 +27,10 @@ Highcharts.chart('container', {
                 .path(['M', xFrom + colWidth - 1, yFrom + 2, 
                   'L', xTo + 1, yTo + 2])
                 .attr({ 'stroke': series.color, 'stroke-width': '2px' })
-                .add(chart.customLines);
+                .add(chart.customLines).toFront();
             }
           }
         });
-      }
-    }
-  },
-
-  plotOptions: {
-    series: {
-      events: {
-        legendItemClick() {
-          const chart = this;
-          chart.redraw();
-        }
       }
     }
   },
