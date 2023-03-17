@@ -27,7 +27,7 @@ Highcharts.chart('container', {
                 .path(['M', xFrom + colWidth - 1, yFrom + 2, 
                   'L', xTo + 1, yTo + 2])
                 .attr({ 'stroke': series.color, 'stroke-width': '2px' })
-                .add(chart.customLines).toFront();
+                .add(chart.customLines);
             }
           }
         });
