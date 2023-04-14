@@ -1,9 +1,26 @@
 randomColor = () => `#${Math.floor(Math.random() * 0xffffff).toString(16)}`;
+const btn = document.querySelector('.btn');
 
 // TASK 1
 const chart1 = Highcharts.chart('container-1', {
   chart: {
-    type: 'packedbubble'
+    type: 'packedbubble',
+    events: {
+      load() {
+        let chart = this,
+          series = chart.series;
+
+        btn.addEventListener('click', () => {
+          let data = series[1].data,
+            point = data[data.length - 1];
+          if (point) {
+            point.series = series[0];
+            point.color = series[0].points[0].color;
+            series[1].data.pop();
+          }
+        });
+      }
+    }
   },
   title: {
     text: 'Task 1'
@@ -11,8 +28,7 @@ const chart1 = Highcharts.chart('container-1', {
   plotOptions: {
     packedbubble: {
       layoutAlgorithm: {
-        splitSeries: true,
-        dragBetweenSeries: true
+        splitSeries: true
       }
     }
   },
@@ -119,11 +135,6 @@ const chart3 = Highcharts.chart('container-3', {
       layoutAlgorithm: {
         splitSeries: true
       },
-      events: {
-        mouseOut: () => false,
-        mouseOver: () => false,
-        select: () => false
-      },
       parentNode: {
         allowPointSelect: false
       }
@@ -149,4 +160,67 @@ const chart3 = Highcharts.chart('container-3', {
 // The solution is the same as for task 2, but applied to parentNodes, so I made several series, and the loop function is a bit different.
 
 // TASK 4
-// I would like to solve this one too, but will need a push in the right direction to get started!
+// Modified ReingoldFruchtermanLayout.prototype.applyLimitBox and applied to a new chart
+// limit shape is a triangle with corners at the top left, top right and bottom left of the plot box:
+//        _
+// |    _/*|
+// |  _/***|
+// |_/*****|
+
+let H = Highcharts,
+  U = H._modules['Core/Utilities.js'],
+  { clamp } = U;
+
+H._modules[
+  'Series/Networkgraph/ReingoldFruchtermanLayout.js'
+].prototype.applyLimitBox = function (node, box) {
+  let radius = node.radius;
+
+  if (this.chart.options.chart.triangleLimitBox) {
+    let xMin = box.left + radius,
+      yMin = box.top + radius,
+      boxHeight = box.height - box.top,
+      boxWidth = box.width - box.left,
+      boxDiagonal = Math.sqrt(boxHeight ** 2 + boxWidth ** 2),
+      tan = boxHeight / boxWidth,
+      sin = boxHeight / boxDiagonal,
+      cos = boxWidth / boxDiagonal,
+      xMax = box.width - radius / sin - node.plotY / tan,
+      yMax = box.height - radius / cos - node.plotY * tan;
+
+    // Limit X-coordinates:
+    node.plotX = clamp(node.plotX, xMin, xMax);
+
+    // Limit Y-coordinates:
+    node.plotY = clamp(node.plotY, yMin, yMax);
+  } else {
+    // Limit X-coordinates:
+    node.plotX = clamp(node.plotX, box.left + radius, box.width - radius);
+
+    // Limit Y-coordinates:
+    node.plotY = clamp(node.plotY, box.top + radius, box.height - radius);
+  }
+};
+
+Highcharts.chart('container-4', {
+  chart: {
+    triangleLimitBox: true,
+    type: 'packedbubble'
+  },
+  title: {
+    text: 'Task 4'
+  },
+  plotOptions: {
+    packedbubble: {
+      layoutAlgorithm: {
+        splitSeries: false
+      }
+    }
+  },
+  series: [
+    {
+      name: 'Rando',
+      data: [...Array(3)].map(() => Math.floor(Math.random() * 10) + 1)
+    }
+  ]
+});
