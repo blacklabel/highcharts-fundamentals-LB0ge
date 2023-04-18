@@ -7,18 +7,37 @@ const chart1 = Highcharts.chart('container-1', {
     type: 'packedbubble',
     events: {
       load() {
-        let chart = this,
+        // Working solution with redraw():
+        const chart = this,
           series = chart.series;
 
         btn.addEventListener('click', () => {
-          let data = series[1].data,
+          const data = series[1].data,
             point = data[data.length - 1];
           if (point) {
             point.series = series[0];
             point.color = series[0].points[0].color;
             series[1].data.pop();
+            chart.redraw();
           }
         });
+
+        // Attempt to use series.addPoint() and point.remove() - not working
+
+        // const chart = this;
+        // btn.addEventListener('click', () => {
+        //   let data = chart.series[1].data,
+        //     point = data[data.length - 1];
+        //   if (point) {
+        //     let { color, series } = point;
+        //     series = chart.series[0];
+        //     color = chart.series[0].points[0].color;
+        //     // chart.series[1].data.pop();
+
+        //     point.remove(false);
+        //     chart.series[0].addPoint(point);
+        //   }
+        // });
       }
     }
   },
@@ -43,9 +62,6 @@ const chart1 = Highcharts.chart('container-1', {
     }
   ]
 });
-
-// TASK 1 - NOTES
-// I solved the bubble movement by simply setting dragBetweenSeries to true, but I am not sure if this was enough, or if the bubbles should move automatically without even using mouse drag&drop. If that is the case, I need a hint.
 
 // TASK 2
 const chart2 = Highcharts.chart('container-2', {
@@ -167,17 +183,17 @@ const chart3 = Highcharts.chart('container-3', {
 // |  _/***|
 // |_/*****|
 
-let H = Highcharts,
+const H = Highcharts,
   U = H._modules['Core/Utilities.js'],
   { clamp } = U;
 
 H._modules[
   'Series/Networkgraph/ReingoldFruchtermanLayout.js'
 ].prototype.applyLimitBox = function (node, box) {
-  let radius = node.radius;
+  const radius = node.radius;
 
   if (this.chart.options.chart.triangleLimitBox) {
-    let xMin = box.left + radius,
+    const xMin = box.left + radius,
       yMin = box.top + radius,
       boxHeight = box.height - box.top,
       boxWidth = box.width - box.left,
@@ -185,8 +201,8 @@ H._modules[
       tan = boxHeight / boxWidth,
       sin = boxHeight / boxDiagonal,
       cos = boxWidth / boxDiagonal,
-      xMax = box.width - radius / sin - node.plotY / tan,
-      yMax = box.height - radius / cos - node.plotY * tan;
+      xMax = boxWidth - radius * sin - node.plotY / tan,
+      yMax = boxHeight - radius / cos - node.plotX * tan;
 
     // Limit X-coordinates:
     node.plotX = clamp(node.plotX, xMin, xMax);
@@ -220,7 +236,7 @@ Highcharts.chart('container-4', {
   series: [
     {
       name: 'Rando',
-      data: [...Array(3)].map(() => Math.floor(Math.random() * 10) + 1)
+      data: [...Array(100)].map(() => Math.floor(Math.random() * 10) + 1)
     }
   ]
 });
