@@ -29,11 +29,8 @@ Highcharts.chart('container', {
               scatterPoints = chart.series[1].data;
             e.preventDefault();
 
-            if (!bin.selected) {
-              // if bin is NOT already selected, select bin and associated scatter points
-              bin.select();
-              bin.setState('select');
-
+            bin.select(); // select/deselect bin
+            if (bin.selected) {
               scatterPoints.forEach((point) => {
                 if (point.y >= binOptions.x && point.y <= binOptions.x2) {
                   point.selected = true;
@@ -42,9 +39,6 @@ Highcharts.chart('container', {
                   point.selected = false;
                 }
               });
-            } else {
-              // if bin is already selected, unselect
-              bin.select();
             }
           }
         }
