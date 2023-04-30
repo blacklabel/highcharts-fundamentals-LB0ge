@@ -17,33 +17,26 @@ Highcharts.chart('container', {
         const chart = this,
           container = chart.container;
 
-        let cursorCircle;
         chart.renderCircle = renderCircle;
         chart.clickedPos = [];
         chart.savedCircles = [];
+        let cursorCircle = chart.renderCircle(0, 0);
+        cursorCircle.hide();
 
         // render circle moving with cursor:
         container.onmousemove = (e) => {
           const x = e.layerX,
             y = e.layerY;
-          if (cursorCircle) {
-            cursorCircle.attr({ x, y });
-          } else {
-            cursorCircle = chart.renderCircle(x, y);
-          }
+          cursorCircle.attr({ x, y });
         };
 
         // avoid cursor circle sticking to chart:
         container.onmouseleave = () => {
-          if (cursorCircle) {
-            cursorCircle.hide();
-          }
+          cursorCircle.hide();
         };
 
         container.onmouseenter = () => {
-          if (cursorCircle) {
-            cursorCircle.show();
-          }
+          cursorCircle.show();
         };
       },
 
