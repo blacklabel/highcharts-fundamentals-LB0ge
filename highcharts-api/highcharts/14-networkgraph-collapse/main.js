@@ -12,7 +12,6 @@ Highcharts.chart('container', {
                         });
                         el.toNode.dataLabel.css({ opacity: 1 });
                         el.toNode.isHidden = false;
-                        console.log(el);
                         el.toNode.dataLabel.element.style.visibility =
                             'visible';
                     } else {
@@ -22,20 +21,13 @@ Highcharts.chart('container', {
                         });
                         el.toNode.dataLabel.css({ opacity: 0 });
                         el.toNode.isHidden = true;
+                        el.toNode.dataLabel.element.style.visibility = 'hidden';
                     }
                 };
+
                 chart.series[0].points.forEach((point) => {
                     chart.showHideChildren(point);
                 });
-
-                const dataLabels = Array.from(
-                    chart.series[0].dataLabelsGroup.element.children
-                );
-
-                dataLabels.forEach(
-                    (el, i) =>
-                        (el.style.visibility = i != 1 ? 'hidden' : 'visible')
-                );
             }
         }
     },
